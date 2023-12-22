@@ -54,7 +54,9 @@
   "feedback_rating",
   "feedback_text",
   "feedback",
-  "feedback_extra"
+  "feedback_extra",
+  "category",
+  "subcategory"
  ],
  "fields": [
   {
@@ -375,12 +377,33 @@
    "fieldname": "feedback_text",
    "fieldtype": "Data",
    "label": "Feedback (Text)"
+  },
+  {
+   "bold": 1,
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "category",
+   "options": "HD Ticket Category",
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "depends_on": "eval:doc.category\n",
+   "fieldname": "subcategory",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "subcategory",
+   "options": "HD Ticket Subcategory",
+   "reqd": 1
   }
  ],
  "icon": "fa fa-issue",
  "idx": 61,
  "links": [],
- "modified": "2023-10-08 23:24:56.917977",
+ "modified": "2023-12-09 16:46:14.563494",
  "modified_by": "Administrator",
  "module": "Helpdesk",
  "name": "HD Ticket",

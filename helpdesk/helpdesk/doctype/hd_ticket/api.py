@@ -9,10 +9,25 @@ from helpdesk.helpdesk.doctype.hd_ticket_template.api import get_one as get_temp
 from helpdesk.utils import check_permissions, get_customer, is_agent
 
 
+import frappe
+
+@frappe.whitelist()
+def get_category_options():
+	categories = frappe.get_all("HD Ticket Category", filters={}, fields=["name"])
+	return [category.get("name") for category in categories]
+
+@frappe.whitelist()
+def get_subcategory_options():
+    subcategories = frappe.get_all("HD Ticket Subcategory", filters={}, fields=["name", "category"])
+    return [{"name": subcategory.get("name"), "category": subcategory.get("category")} for subcategory in subcategories]
+
+
 @frappe.whitelist()
 def new(doc, attachments=[]):
 	doc["doctype"] = "HD Ticket"
 	doc["via_customer_portal"] = bool(frappe.session.user)
+	doc["HD Ticket Category"] = frappe.get_value("Category", {"name": doc.get("category")})
+	doc["HD Ticket Subcategory"] = frappe.get_value("Subcategory", {"name": doc.get("subcategory")})
 	d = frappe.get_doc(doc).insert()
 	d.create_communication_via_contact(d.description, attachments)
 	return d

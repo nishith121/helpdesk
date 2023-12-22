@@ -13,14 +13,37 @@
         @change="templateFields[field.fieldname] = $event.value"
       />
     </div>
-    <div class="m-5">
+    <div class="grid grid-cols-1 gap-4 px-5 sm:grid-cols-2">
+  <!-- Category Field -->
+  <div class="col-span-1 sm:col-span-1">
+    <FormControl
+      v-model="category"
+      type="select"
+      label="Category"
+      :options="categoryOptions"
+    />
+  </div>
+
+  <!-- Subcategory Field -->
+  <div v-if="category" class="col-span-1 sm:col-span-1">
+    <FormControl
+      v-model="subcategory"
+      type="select"
+      label="Subcategory"
+      :options="subcategoryOptions"
+    />
+  </div>
+</div>
+
+  <div class="m-5">
       <FormControl
         v-model="subject"
         type="text"
         label="Subject"
         placeholder="A short description"
       />
-    </div>
+</div>
+
     <TicketNewArticles :search="subject" class="mx-5 mb-5" />
     <span class="mx-5 mb-5">
       <TicketTextEditor
@@ -47,7 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from "vue";
+import axios from "axios";
+import { ref, computed, reactive, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { createResource, usePageMeta, Button, FormControl } from "frappe-ui";
 import sanitizeHtml from "sanitize-html";
@@ -57,6 +81,46 @@ import { UniInput } from "@/components";
 import TicketBreadcrumbs from "./TicketBreadcrumbs.vue";
 import TicketNewArticles from "./TicketNewArticles.vue";
 import TicketTextEditor from "./TicketTextEditor.vue";
+
+const categoryOptions = ref([]);
+const subcategoryOptions = ref([]);
+const subcategoryOptionstemp = ref([]);
+const selectedcategory = ref(null);
+
+
+const fetchOptions = async () => {
+  try {
+    const categoryResponse = await fetch("/api/method/helpdesk.helpdesk.doctype.hd_ticket.api.get_category_options");
+    const subcategoryResponse = await fetch("/api/method/helpdesk.helpdesk.doctype.hd_ticket.api.get_subcategory_options");
+
+    if (categoryResponse.ok) {
+      const categoryData = await categoryResponse.json();
+      categoryOptions.value = categoryData.message;
+    } else {
+      throw new Error(`Error fetching category options: ${categoryResponse.statusText}`);
+    }
+
+    if (subcategoryResponse.ok) {
+      const subcategoryData = await subcategoryResponse.json();
+      subcategoryOptions.value = subcategoryData.message.map(subcategory => subcategory.name);
+      subcategoryOptionstemp.value =  subcategoryData.message;
+    } else {
+      throw new Error(`Error fetching subcategory options: ${subcategoryResponse.statusText}`);
+    }
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+
+onMounted(() => {
+  fetchOptions();
+});
+
+
+
 
 interface P {
   templateId?: string;
@@ -68,6 +132,8 @@ const props = withDefaults(defineProps<P>(), {
 const route = useRoute();
 const router = useRouter();
 const subject = ref("");
+const category = ref("");
+const subcategory = ref("");
 const description = ref("");
 const attachments = ref([]);
 const templateFields = reactive({});
@@ -89,6 +155,8 @@ const ticket = createResource({
   makeParams: () => ({
     doc: {
       description: description.value,
+      category: category.value,
+      subcategory: subcategory.value,
       subject: subject.value,
       template: props.templateId,
       ...templateFields,
@@ -97,7 +165,7 @@ const ticket = createResource({
   }),
   validate: (params) => {
     const fields = visibleFields.value.filter((f) => f.required);
-    const toVerify = [...fields, "subject", "description"];
+    const toVerify = [...fields,"category","subcategory","subject","description"];
     for (const field of toVerify) {
       if (isEmpty(params.doc[field.fieldname || field])) {
         return `${field.label || field} is required`;
@@ -124,4 +192,11 @@ function sanitize(html: string) {
 usePageMeta(() => ({
   title: "New Ticket",
 }));
+
+watch(category, (newValue) => {
+  console.log('Selected Category:', newValue);
+  subcategoryOptions.value = subcategoryOptionstemp.value.filter(subcategory => subcategory.category === newValue).map(subcategory => subcategory.name);
+  
+});
+
 </script>

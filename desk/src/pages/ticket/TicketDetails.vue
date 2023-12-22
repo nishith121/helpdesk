@@ -100,12 +100,24 @@
           {{ o.label }}
         </span>
         <Autocomplete
-          :options="o.store.dropdown"
+          :options="o.store"
           :placeholder="`Select a ${o.label}`"
           :value="data[o.field]"
           @change="update(o.field, $event.value)"
         />
       </div>
+      <div :key="subcategory" class="space-y-1.5">
+        <span class="block text-sm text-gray-700">
+          subcategory
+        </span>
+        <Autocomplete
+          :options="useTicketSubcategoryStore().dropdown(data[`category`])"
+          :placeholder="`Select a category`"
+          :value="data[`subcategory`]"
+          @change="update(`subcategory`, $event.value)"
+        />
+      </div>
+      
       <UniInput
         v-for="field in data.template.fields"
         :key="field.fieldname"
@@ -126,6 +138,8 @@ import { createToast } from "@/utils";
 import { useTeamStore } from "@/stores/team";
 import { useTicketPriorityStore } from "@/stores/ticketPriority";
 import { useTicketTypeStore } from "@/stores/ticketType";
+import { useTicketCategoryStore} from "@/stores/ticketCategory";
+import { useTicketSubcategoryStore} from "@/stores/ticketSubcategory";
 import { useError } from "@/composables/error";
 import { StarRating, UniInput } from "@/components";
 import TicketSidebarHeader from "./TicketSidebarHeader.vue";
@@ -134,24 +148,31 @@ import { ITicket } from "./symbols";
 const ticket = inject(ITicket);
 const data = computed(() => ticket.data);
 
+
 const options = computed(() => [
   {
     field: "ticket_type",
     label: "Ticket type",
-    store: useTicketTypeStore(),
+    store: useTicketTypeStore().dropdown,
   },
   {
     field: "priority",
     label: "Priority",
-    store: useTicketPriorityStore(),
+    store: useTicketPriorityStore().dropdown,
   },
   {
     field: "agent_group",
     label: "Team",
-    store: useTeamStore(),
+    store: useTeamStore().dropdown,
+  },
+  {
+    field: "category",
+    label: "Category",
+    store: useTicketCategoryStore().dropdown,
   },
 ]);
 
+  
 function update(fieldname: string, value: string) {
   createResource({
     url: "frappe.client.set_value",
@@ -173,6 +194,7 @@ function update(fieldname: string, value: string) {
     onError: useError(),
   });
 }
+
 </script>
 
 <style scoped>

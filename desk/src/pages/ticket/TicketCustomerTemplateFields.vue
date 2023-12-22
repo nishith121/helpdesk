@@ -6,6 +6,18 @@
         {{ transformStatus(ticket.data.status) }}
       </span>
     </div>
+    <div class="space-y-1.5">
+      <span class="block text-sm text-gray-700"> category </span>
+      <span class="block break-words text-base font-medium text-gray-900">
+        {{ transformStatus(ticket.data.category) }}
+      </span>
+    </div>
+    <div class="space-y-1.5">
+      <span class="block text-sm text-gray-700"> subcategory </span>
+      <span class="block break-words text-base font-medium text-gray-900">
+        {{ transformStatus(ticket.data.subcategory) }}
+      </span>
+    </div>
     <div
       v-for="field in ticket.data.template.fields.filter(
         (f) => !f.hide_from_customer
